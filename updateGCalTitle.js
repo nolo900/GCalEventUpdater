@@ -30,7 +30,14 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
 	if (process.argv.length === 6){
 		authorize(JSON.parse(content), updateCalendarEventWithDatetimes);
 	} else if (process.argv.length === 4){
+
+		if(process.argv[3] === "DELETE"){
+			authorize(JSON.parse(content), deleteEvent);
+			return;
+		}
+
 		authorize(JSON.parse(content), updateCalendarEvent);
+
 	} else {
 		console.log("Incorrect params. Here's some event IDs to work with...");
 		authorize(JSON.parse(content), listEvents);
@@ -146,6 +153,24 @@ function listEvents(auth) {
 	});
 }
 
+function deleteEvent(auth) {
+	var calendar = google.calendar('v3');
+	var params = {
+		auth: auth,
+		calendarId: calID,
+		eventId: eventID,
+	};
+
+	calendar.events.delete(params, function(err) {
+		if (err) {
+			console.log('The API returned an error: ' + err);
+			console.log('To delete an event, pass "DELETE" as the new title name.');
+			return;
+		}
+		console.log('Event deleted.');
+	});
+}
+
 function updateCalendarEvent(auth){
 	var calendar = google.calendar('v3');
 	calendar.events.patch({
@@ -203,5 +228,6 @@ function displayUsageHints() {
 	console.log('--------------------------- USAGE HINTS -------------------------------');
 	console.log('node updateGCalTitle.js eventID newTitle [startDatetime endDatetime]');
 	console.log('** Datetime must be in ISO format: "2016-12-07T20:30:00-05:00" **');
+	console.log('** To delete an event, just pass in DELETE as the new title **');
 	console.log('-----------------------------------------------------------------------');
 }
